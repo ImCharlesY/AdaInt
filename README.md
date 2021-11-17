@@ -1,155 +1,126 @@
-<div align="center">
-  <img src="resources/mmediting-logo.png" width="500px"/>
-</div>
-
 ## Introduction
 
-English | [简体中文](/README_zh-CN.md)
+The codebase provides the training and evaluation code for the submission "AdaInt: Learning Adaptive Intervals for 3D Lookup Tables on Real-time Image Enhancement". It is based on the popular MMEditing toolbox ([v0.11.0](https://github.com/open-mmlab/mmediting/tree/v0.11.0)). Please refer to [ori_README.md](ori_README.md) for the original README.
 
-[![Documentation](https://readthedocs.org/projects/mmediting/badge/?version=latest)](https://mmediting.readthedocs.io/en/latest/?badge=latest)
-[![actions](https://github.com/open-mmlab/mmediting/workflows/build/badge.svg)](https://github.com/open-mmlab/mmediting/actions)
-[![codecov](https://codecov.io/gh/open-mmlab/mmediting/branch/master/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmediting)
-[![PyPI](https://badge.fury.io/py/mmedit.svg)](https://pypi.org/project/mmedit/)
-[![LICENSE](https://img.shields.io/github/license/open-mmlab/mmediting.svg)](https://github.com/open-mmlab/mmediting/blob/master/LICENSE)
-[![Average time to resolve an issue](https://isitmaintained.com/badge/resolution/open-mmlab/mmediting.svg)](https://github.com/open-mmlab/mmediting/issues)
-[![Percentage of issues still open](https://isitmaintained.com/badge/open/open-mmlab/mmediting.svg)](https://github.com/open-mmlab/mmediting/issues)
+## Code Structure
 
+- `mmedit/`: the original MMEditing toolbox.
+- `adaint/`: the core implementation of the submission, including:
+  - `annfiles/`: including the annotation files for FiveK and PPR10K datasets.
+  - `dataset.py`: the dataset class for image enhancement (FiveK and PPR10K).
+  - `transforms.py`: including some augmentations not provided by MMEditing toolbox.
+  - `ailut_transform/`: including the python interfaces and C++ CUDA implementation of the proposed AiLUT-Transform.
+  - `model.py`: the implementation of AiLUT model (3D-LUT + AdaInt).
+  - `configs/`: including configurations to conduct experiments.
 
-MMEditing is an open source image and video editing toolbox based on PyTorch. It is a part of the [OpenMMLab](https://open-mmlab.github.io/) project.
+## Prerequisites
 
-The master branch works with **PyTorch 1.3+**.
-Please kindly note that MMEditing will switch to **PyTorch 1.5+** from Oct. 2021. The compatibility to earlier versions of PyTorch will no longer be guaranteed.
+### Dependencies
 
-Documentation: https://mmediting.readthedocs.io/en/latest/.
+- Ubuntu 18.04.5 LTS
+- Python 3.7.10 or higher
+- PyTorch 1.8.1 or higher (only verified on 1.8.1)
+- **CUDA 10.2**
+- **GCC/G++ 7.5**
+- **MMCV 1.3.17**
+- **MMEditing 0.11.0**
 
-<div align="left">
-  <img src="resources/mmediting-demo.jpg"/>
-</div>
+### Installation
 
-### Major features
+You can set up the MMEditing toolbox with conda and pip as follows:
 
-- **Modular design**
+```shell
+conda install -c pytorch pytorch=1.8.1 torchvision cudatoolkit -y
+pip install -r requirements.txt
+pip install -v -e .
+```
 
-  We decompose the editing framework into different components and one can easily construct a customized editor framework by combining different modules.
+After setting up the MMEditing toolbox, please complie and install the AiLUT-Transform CUDA extension following the command bellow:
 
-- **Support of multiple tasks in editing**
+```shell
+python adaint/ailut_transform/setup.py install
+```
 
-  The toolbox directly supports popular and contemporary *inpainting*, *matting*, *super-resolution* and *generation* tasks.
+If you fail to complile the CUDA extension, please check the versions of PyTorch, CUDA and GCC/G++ carefully.
 
-- **State of the art**
+## Datasets
 
-  The toolbox provides state-of-the-art methods in inpainting/matting/super-resolution/generation.
+The paper use the [FiveK](https://data.csail.mit.edu/graphics/fivek/) and [PPR10K](https://github.com/csjliang/PPR10K) datasets for experiments. It is recommended to refer to the dataset creators first using the above two urls.
 
-## Model Zoo
+### Download
 
-Supported algorithms:
+- FiveK
 
-<details open>
-<summary>Inpainting</summary>
+You can download the original FiveK dataset from the dataset [homepage](https://data.csail.mit.edu/graphics/fivek/) and then preprocess the dataset using Adobe Lightroom following the instruction [here](TODO). For fast setting up, you can also download only the 480p dataset preprocessed by Zeng ([[GoogleDrive](https://drive.google.com/drive/folders/1Y1Rv3uGiJkP6CIrNTSKxPn1p-WFAc48a?usp=sharing)],[[onedrive](https://connectpolyu-my.sharepoint.com/:f:/g/personal/16901447r_connect_polyu_hk/EqNGuQUKZe9Cv3fPG08OmGEBbHMUXey2aU03E21dFZwJyg?e=QNCMMZ)],[[baiduyun](https://pan.baidu.com/s/1CsQRFsEPZCSjkT3Z1X_B1w):5fyk]), including 8-bit sRGB, 16-bit XYZ input images and 8-bit sRGB groundtruth images.
 
-- [x] [DeepFillv1](configs/inpainting/deepfillv1/README.md) (CVPR'2018)
-- [x] [DeepFillv2](configs/inpainting/deepfillv2/README.md) (CVPR'2019)
-- [x] [Global&Local](configs/inpainting/global_local/README.md) (ToG'2017)
-- [x] [PConv](configs/inpainting/partial_conv/README.md) (ECCV'2018)
+After downloading the dataset, please unzip the images into the `./data/FiveK` directory. Please also place the annotation files in `./adaint/annfiles/FiveK` to the same directory. The final directory structure is as follows.
 
-</details>
+```
+./data/FiveK
+    input/
+        JPG/480p/                # 8-bit sRGB inputs
+        PNG/480p_16bits_XYZ_WB/  # 16-bit XYZ inputs
+    expertC/JPG/480p/            # 8-bit sRGB groundtruths
+    train.txt
+    test.txt
+```
 
-<details open>
-<summary>Matting</summary>
+- PPR10K
 
-- [x] [DIM](configs/mattors/dim/README.md) (CVPR'2017)
-- [x] [GCA](configs/mattors/gca/README.md) (AAAI'2020)
-- [x] [IndexNet](configs/mattors/indexnet/README.md) (ICCV'2019)
+We download the 360p dataset (`train_val_images_tif_360p` and `masks_360p`) from [PPR10K](https://github.com/csjliang/PPR10K) to conduct our experiments.
 
-</details>
+After downloading the dataset, please unzip the images into the `./data/PPR10K` directory. Please also place the annotation files in `./adaint/annfiles/PPR10K` to the same directory. The expected directory structure is as follows.
 
-<details open>
-<summary>Super-Resolution</summary>
+```
+data/PPR10K
+    source/       # 16-bit sRGB inputs
+    source_aug_6/ # 16-bit sRGB inputs with 5 versions of augmented
+    masks/        # human-region masks
+    target_a/     # 8-bit sRGB groundtruths retouched by expert a
+    target_b/     # 8-bit sRGB groundtruths retouched by expert b
+    target_c/     # 8-bit sRGB groundtruths retouched by expert c
+    train.txt
+    train_aug.txt
+    test.txt
+```
 
-- [x] [BasicVSR](configs/restorers/basicvsr/README.md) (CVPR'2021)
-- [x] [BasicVSR++](configs/restorers/basicvsr_plusplus/README.md) (NTIRE'2021)
-- [x] [EDSR](configs/restorers/edsr/README.md) (CVPR'2017)
-- [x] [EDVR](configs/restorers/edvr/README.md) (CVPR'2019)
-- [x] [ESRGAN](configs/restorers/esrgan/README.md) (ECCV'2018)
-- [x] [GLEAN](configs/restorers/glean/README.md) (CVPR'2021)
-- [x] [IconVSR](configs/restorers/iconvsr/README.md) (CVPR'2021)
-- [x] [LIIF](configs/restorers/liif/README.md) (CVPR'2021)
-- [x] [RDN](configs/restorers/rdn/README.md) (CVPR'2018)
-- [x] [SRCNN](configs/restorers/srcnn/README.md) (TPAMI'2015)
-- [x] [SRResNet&SRGAN](configs/restorers/srresnet_srgan/README.md) (CVPR'2016)
-- [x] [TDAN](configs/restorers/tdan/README.md) (CVPR'2020)
-- [x] [TOF](configs/restorers/tof/README.md) (IJCV'2019)
-- [x] [TTSR](configs/restorers/ttsr/README.md) (CVPR'2020)
-- [x] [DIC](configs/restorers/dic/README.md) (CVPR'2020)
+## Usage
 
-</details>
+### Train on FiveK-sRGB (for photo retouching)
 
-<details open>
-<summary>Generation</summary>
+- Configure the experiment by modifying `adaint/configs/fivekrgb.py`. Some critical hyper-parameters:
+  - `model.n_ranks`: denoted as `M` in the submission.
+  - `model.n_vertices`: denoted as `N` in the submission.
+  - `model.en_adaint`: whether to use the AdaInt. If False, the model degenerates to [TPAMI 3D-LUT](https://www4.comp.polyu.edu.hk/~cslzhang/paper/PAMI_LUT.pdf).
+  - `model.en_adaint_share`: whether to share AdaInt among color channels (see the `Share-AdaInt` in ablation studies).
+  - `model.backbone`: the architecture of backbone (mapping `f` in the submission).
 
-- [x] [CycleGAN](configs/synthesizers/cyclegan/README.md) (ICCV'2017)
-- [x] [pix2pix](configs/synthesizers/pix2pix/README.md) (CVPR'2017)
+- Start the training using the following command:
 
-</details>
+```shell
+python tools/train.py adaint/configs/fivekrgb.py
+```
 
+### Train on FiveK-XYZ (for tone mapping)
 
-Please refer to [model_zoo](https://mmediting.readthedocs.io/en/latest/modelzoo.html) for more details.
+- Configure the experiment by modifying `adaint/configs/fivekxyz.py`.
+
+- Start the training using the following command:
+
+```shell
+python tools/train.py adaint/configs/fivekxyz.py
+```
+
+### Train on PPR10K (for photo retouching)
+
+- Configure the experiment by modifying `adaint/configs/ppr10k.py`.
+
+- Start the training using the following command:
+
+```shell
+python tools/train.py adaint/configs/ppr10k.py
+```
 
 ## License
 
-This project is released under the [Apache 2.0 license](LICENSE).
-
-## Changelog
-
-v0.10.0 was released in 2021-8-12.
-
-Note that **MMSR** has been merged into this repo, as a part of MMEditing.
-With elaborate designs of the new framework and careful implementations,
-hope MMEditing could provide better experience.
-
-## Installation
-
-Please refer to [install.md](docs/install.md) for installation.
-
-## Get Started
-
-Please see [getting_started.md](docs/getting_started.md) for the basic usage of MMEditing.
-
-
-
-## Citation
-
-If you find this project useful in your research, please consider cite:
-
-```bibtex
-@misc{mmediting2020,
-    title={OpenMMLab Editing Estimation Toolbox and Benchmark},
-    author={MMEditing Contributors},
-    howpublished = {\url{https://github.com/open-mmlab/mmediting}},
-    year={2020}
-}
-```
-
-
-## Contributing
-
-We appreciate all contributions to improve MMEditing. Please refer to [CONTRIBUTING.md in MMDetection](https://github.com/open-mmlab/mmdetection/blob/master/.github/CONTRIBUTING.md) for the contributing guideline.
-
-## Acknowledgement
-
-MMEditing is an open source project that is contributed by researchers and engineers from various colleges and companies. We appreciate all the contributors who implement their methods or add new features, as well as users who give valuable feedbacks. We wish that the toolbox and benchmark could serve the growing research community by providing a flexible toolkit to reimplement existing methods and develop their own new methods.
-
-## Projects in OpenMMLab
-
-- [MMCV](https://github.com/open-mmlab/mmcv): OpenMMLab foundational library for computer vision.
-- [MIM](https://github.com/open-mmlab/mim): MIM Installs OpenMMLab Packages.
-- [MMClassification](https://github.com/open-mmlab/mmclassification): OpenMMLab image classification toolbox and benchmark.
-- [MMDetection](https://github.com/open-mmlab/mmdetection): OpenMMLab detection toolbox and benchmark.
-- [MMDetection3D](https://github.com/open-mmlab/mmdetection3d): OpenMMLab's next-generation platform for general 3D object detection.
-- [MMSegmentation](https://github.com/open-mmlab/mmsegmentation): OpenMMLab semantic segmentation toolbox and benchmark.
-- [MMAction2](https://github.com/open-mmlab/mmaction2): OpenMMLab's next-generation action understanding toolbox and benchmark.
-- [MMTracking](https://github.com/open-mmlab/mmtracking): OpenMMLab video perception toolbox and benchmark.
-- [MMPose](https://github.com/open-mmlab/mmpose): OpenMMLab pose estimation toolbox and benchmark.
-- [MMEditing](https://github.com/open-mmlab/mmediting): OpenMMLab image and video editing toolbox.
-- [MMOCR](https://github.com/open-mmlab/mmocr): A Comprehensive Toolbox for Text Detection, Recognition and Understanding.
-- [MMGeneration](https://github.com/open-mmlab/mmgeneration): A powerful toolkit for generative models.
+This project will be released under the [Apache 2.0 license](LICENSE).
