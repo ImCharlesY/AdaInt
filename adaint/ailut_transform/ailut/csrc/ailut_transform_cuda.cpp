@@ -91,7 +91,7 @@ void ailut_transform_backward(
 /* Interfaces Binding */
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  m.def("forward", &ailut_transform_forward, "AiLut-Transform forward");
-  m.def("backward", &ailut_transform_backward, "AiLut-Transform backward");
+  m.def("cforward", &ailut_transform_forward, "AiLut-Transform forward");
+  m.def("cbackward", &ailut_transform_backward, "AiLut-Transform backward");
 }
 

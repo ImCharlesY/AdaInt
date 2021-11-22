@@ -15,7 +15,7 @@ from mmedit.models.builder import build_loss
 from mmedit.core import psnr, ssim, tensor2img
 from mmedit.utils import get_root_logger
 
-from .ailut_transform import ailut_transform
+from ailut import ailut_transform
 
 
 class BasicBlock(nn.Sequential):
