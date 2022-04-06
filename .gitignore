@@ -127,3 +127,6 @@ mmedit/.mim
 
 # Pytorch Server
 *.mar
+
+# include custom pretrained models
+!pretrained/*.pth

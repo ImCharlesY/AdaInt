@@ -1,3 +1,4 @@
+import os
 import os.path as osp
 from setuptools import setup, find_packages
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
@@ -9,17 +10,21 @@ def get_version(version_file):
     return locals()['__version__']
 
 
+os.chdir(osp.dirname(osp.abspath(__file__)))
 csrc_directory = osp.join('ailut', 'csrc')
 setup(
     name='ailut',
     version=get_version(osp.join('ailut', 'version.py')),
     description='Adaptive Interval 3D LookUp Table Transform',
+    author='Charles',
+    author_email='charles.young@sjtu.edu.cn',
     packages=find_packages(),
     include_package_data=False,
     ext_modules=[
         CUDAExtension('ailut._ext', [
-            osp.join(csrc_directory, 'ailut_transform_cuda.cpp'),
-            osp.join(csrc_directory, 'ailut_transform_kernel.cu')
+            osp.join(csrc_directory, 'ailut_transform.cpp'),
+            osp.join(csrc_directory, 'ailut_transform_cpu.cpp'),
+            osp.join(csrc_directory, 'ailut_transform_cuda.cu')
         ])
     ],
     cmdclass={
