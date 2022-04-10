@@ -74,11 +74,11 @@ We provide a quick demo script in `adaint/demo.py`. You can execute it in the fo
 python adaint/demo.py [CONFIG_FILE] [MODEL_CHECKPOINT] [INPUT_IMAGE_PATH] [OUTPUT_IMAGE_PATH]
 ```
 
-For quick testing, we provide a pretrained model in `./pretrained/AiLUT-FiveK-sRGB.pth` and an input image from the FiveK dataset in 8-bit sRGB format (`./demo_images/a4739.jpg`). You can conduct enhancement on it using the below command:
+For quick testing, we provide a pretrained model in `./pretrained/AiLUT-FiveK-sRGB.pth` and an input image from the FiveK dataset in 8-bit sRGB format (`./resources/a4739.jpg`). You can conduct enhancement on it using the below command:
 ```shell
-python adaint/demo.py adaint/configs/fivekrgb.py pretrained/AiLUT-FiveK-sRGB.pth demo_images/a4739.jpg demo_images/a4739_enhanced.png
+python adaint/demo.py adaint/configs/fivekrgb.py pretrained/AiLUT-FiveK-sRGB.pth resources/a4739.jpg resources/a4739_enhanced.png
 ```
-The enhanced result can be found in `demo_images/a4739_enhanced.png`.
+The enhanced result can be found in `resources/a4739_enhanced.png`.
 
 ## Datasets
 

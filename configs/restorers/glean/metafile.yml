@@ -1,9 +1,0 @@
-Collections:
-- Metadata:
-    Architecture:
-    - GLEAN
-  Name: GLEAN
-  Paper:
-  - https://arxiv.org/abs/2012.00739
-  README: configs/restorers/glean/README.md
-Models: []

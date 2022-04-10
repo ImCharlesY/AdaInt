@@ -33,13 +33,3 @@ repos:
     hooks:
       - id: codespell
         args: ["--skip", "*.ipynb,tools/data/hvu/label_map.json,configs/restorers/srresnet_srgan/*.md", "-L", "formating,te,nd,thre,Gool,gool"]
-  - repo: local
-    hooks:
-      - id: update-model-index
-        name: update-model-index
-        description: Collect model information and update model-index.yml
-        entry: .dev_scripts/github/update_model_index.py
-        additional_dependencies: [mmcv]
-        language: python
-        files: ^configs/.*\.md$
-        require_serial: true
