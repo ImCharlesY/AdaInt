@@ -183,7 +183,7 @@ python tools/test.py adaint/configs/fivekxyz.py pretrained/AiLUT-FiveK-XYZ.pth -
 
 - On PPR10K (for photo retouching)
 ```shell
-python tools/test.py adaint/configs/ppr10k.py pretrained/AiLUT-PPR10K-sRGB.pth --save-path [PATH/TO/SAVE/RESULTS]
+python tools/test.py adaint/configs/ppr10k.py pretrained/AiLUT-PPR10KA-sRGB.pth --save-path [PATH/TO/SAVE/RESULTS]
 ```
 ## License
 
