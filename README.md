@@ -2,7 +2,16 @@
 
 ## Introduction
 
-The codebase provides the training and evaluation code for the paper "AdaInt: Learning Adaptive Intervals for 3D Lookup Tables on Real-time Image Enhancement". It is based on the popular MMEditing toolbox ([v0.11.0](https://github.com/open-mmlab/mmediting/tree/v0.11.0)). Please refer to [ori_README.md](https://github.com/open-mmlab/mmediting/blob/v0.11.0/README.md) for the original README.
+The codebase provides the official PyTorch implementation and some model checkpoints for the paper ["AdaInt: Learning Adaptive Intervals for 3D Lookup Tables on Real-time Image Enhancement"](https://arxiv.org/abs/TODO) (accepted by CVPR 2022).
+
+<p align="center">
+  <img src="resources/framework.jpg" />
+</p>
+
+AdaInt (**Ada**ptive **Int**erval) is an effective and efficient mechanism for promoting learnable 3D lookup tables (LUTs) on the real-time image enhancement task, which can be implemented as a plug-and-play neural network module. The central idea is to introduce image-adaptive sampling intervals for learning a non-uniform 3D LUT layout. To enable the learning of non-uniform sampling intervals in the 3D color space, a differentiable AiLUT-Transform (**A**daptive **I**nterval **LUT Transform**) operator is also proposed to provide gradients to the
+sampling intervals. Experiments demonstrate that methods equipped with AdaInt can achieve state-of-the-art performance on two public benchmark datasets with a negligible overhead increase.
+
+The codebase is based on the popular MMEditing toolbox ([v0.11.0](https://github.com/open-mmlab/mmediting/tree/v0.11.0)). Please refer to [ori_README.md](https://github.com/open-mmlab/mmediting/blob/v0.11.0/README.md) for the original README.
 
 ## Code Structure
 
@@ -11,7 +20,7 @@ The codebase provides the training and evaluation code for the paper "AdaInt: Le
   - `annfiles/`: including the annotation files for FiveK and PPR10K datasets.
   - `dataset.py`: the dataset class for image enhancement (FiveK and PPR10K).
   - `transforms.py`: including some augmentations not provided by MMEditing toolbox.
-  - `ailut_transform/`: including the python interfaces, the C++ CUDA implementation and the wheel package of the proposed AiLUT-Transform.
+  - `ailut_transform/`: including the python interfaces, the C++ CUDA implementation, and the wheel package of the proposed AiLUT-Transform.
   - `model.py`: the implementation of AiLUT model (3D-LUT + AdaInt).
   - `configs/`: including configurations to conduct experiments.
   - `metrics/`: including MATLAB scripts to calculate metrics reported in the paper.
@@ -88,7 +97,7 @@ The paper use the [FiveK](https://data.csail.mit.edu/graphics/fivek/) and [PPR10
 
 - FiveK
 
-You can download the original FiveK dataset from the dataset [homepage](https://data.csail.mit.edu/graphics/fivek/) and then preprocess the dataset using Adobe Lightroom following the instruction in [Prepare_FiveK.md](Prepare_FiveK.md).
+You can download the original FiveK dataset from the dataset [homepage](https://data.csail.mit.edu/graphics/fivek/) and then preprocess the dataset using Adobe Lightroom following the instructions in [Prepare_FiveK.md](Prepare_FiveK.md).
 
 For fast setting up, you can also download only the 480p dataset preprocessed by Zeng ([[GoogleDrive](https://drive.google.com/drive/folders/1Y1Rv3uGiJkP6CIrNTSKxPn1p-WFAc48a?usp=sharing)],[[onedrive](https://connectpolyu-my.sharepoint.com/:f:/g/personal/16901447r_connect_polyu_hk/EqNGuQUKZe9Cv3fPG08OmGEBbHMUXey2aU03E21dFZwJyg?e=QNCMMZ)],[[baiduyun](https://pan.baidu.com/s/1CsQRFsEPZCSjkT3Z1X_B1w):5fyk]), including 8-bit sRGB, 16-bit XYZ input images and 8-bit sRGB groundtruth images.
 
@@ -187,4 +196,24 @@ python tools/test.py adaint/configs/ppr10k.py pretrained/AiLUT-PPR10KA-sRGB.pth 
 ```
 ## License
 
-This project will be released under the [Apache 2.0 license](LICENSE).
+This codebase is released under the [Apache 2.0 license](LICENSE).
+
+## Citation
+
+If you find this repository useful, please kindly consider citing the following paper:
+```
+@InProceedings{yang2022adaint,
+  title={AdaInt: Learning Adaptive Intervals for 3D Lookup Tables on Real-time Image Enhancement},
+  author={Yang, Canqian and Jin, Meiguang and Jia, Xu and Xu, Yi and Chen, Ying},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year={2022}
+}
+```
+
+## Acknowledgements
+
+This codebase is based on the following open-source projects. We thank their authors for making the source code publically available.
+
+- [MMEditing](https://github.com/open-mmlab/mmediting)
+- [TPAMI 3D-LUT](https://github.com/HuiZeng/Image-Adaptive-3DLUT)
+- [PPR10K](https://github.com/csjliang/PPR10K)
