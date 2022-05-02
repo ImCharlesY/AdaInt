@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The codebase provides the official PyTorch implementation and some model checkpoints for the paper ["AdaInt: Learning Adaptive Intervals for 3D Lookup Tables on Real-time Image Enhancement"](https://arxiv.org/abs/TODO) (accepted by CVPR 2022).
+The codebase provides the official PyTorch implementation and some model checkpoints for the paper ["AdaInt: Learning Adaptive Intervals for 3D Lookup Tables on Real-time Image Enhancement"](https://arxiv.org/abs/2204.13983) (accepted by CVPR 2022).
 
 <p align="center">
   <img src="resources/framework.jpg" />
