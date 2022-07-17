@@ -35,7 +35,7 @@ class BasicBlock(nn.Sequential):
 class TPAMIBackbone(nn.Sequential):
     r"""The 5-layer CNN backbone module in [TPAMI 3D-LUT]
         (https://github.com/HuiZeng/Image-Adaptive-3DLUT).
-        
+
     Args:
         pretrained (bool, optional): [ignored].
         input_resolution (int, optional): Resolution for pre-downsampling. Default: 256.
@@ -67,7 +67,7 @@ class TPAMIBackbone(nn.Sequential):
 
 class Res18Backbone(nn.Module):
     r"""The ResNet-18 backbone.
-        
+
     Args:
         pretrained (bool, optional): Whether to use the torchvison pretrained weights.
             Default: True.
@@ -87,32 +87,32 @@ class Res18Backbone(nn.Module):
         imgs = F.interpolate(imgs, size=(self.input_resolution,) * 2,
             mode='bilinear', align_corners=False)
         return self.net(imgs).view(imgs.shape[0], -1)
-    
-    
+
+
 class LUTGenerator(nn.Module):
     r"""The LUT generator module (mapping h).
 
     Args:
         n_colors (int): Number of input color channels.
         n_vertices (int): Number of sampling points along each lattice dimension.
-        n_feats (int): Dimension of the input image representation vector. 
+        n_feats (int): Dimension of the input image representation vector.
         n_ranks (int): Number of ranks in the mapping h (or the number of basis LUTs).
     """
-    
+
     def __init__(self, n_colors, n_vertices, n_feats, n_ranks) -> None:
         super().__init__()
-        
+
         # h0
         self.weights_generator = nn.Linear(n_feats, n_ranks)
         # h1
         self.basis_luts_bank = nn.Linear(
             n_ranks, n_colors * (n_vertices ** n_colors), bias=False)
-        
+
         self.n_colors = n_colors
         self.n_vertices = n_vertices
         self.n_feats = n_feats
         self.n_ranks = n_ranks
-          
+
     def init_weights(self):
         r"""Init weights for models.
 
@@ -129,13 +129,13 @@ class LUTGenerator(nn.Module):
                 self.n_colors, *((self.n_vertices,) * self.n_colors)) for _ in range(self.n_ranks - 1)]
             ], dim=0).view(self.n_ranks, -1)
         self.basis_luts_bank.weight.data.copy_(identity_lut.t())
-        
+
     def forward(self, x):
         weights = self.weights_generator(x)
         luts = self.basis_luts_bank(weights)
         luts = luts.view(x.shape[0], -1, *((self.n_vertices,) * self.n_colors))
         return weights, luts
-    
+
     def regularizations(self, smoothness, monotonicity):
         basis_luts = self.basis_luts_bank.weight.t().view(
             self.n_ranks, self.n_colors, *((self.n_vertices,) * self.n_colors))
@@ -148,37 +148,37 @@ class LUTGenerator(nn.Module):
         reg_monotonicity = monotonicity * mn
         return reg_smoothness, reg_monotonicity
 
-    
+
 class AdaInt(nn.Module):
     r"""The Adaptive Interval Learning (AdaInt) module (mapping g).
-    
+
     It consists of a single fully-connected layer and some post-process operations.
-    
+
     Args:
         n_colors (int): Number of input color channels.
         n_vertices (int): Number of sampling points along each lattice dimension.
-        n_feats (int): Dimension of the input image representation vector. 
+        n_feats (int): Dimension of the input image representation vector.
         adaint_share (bool, optional): Whether to enable Share-AdaInt. Default: False.
     """
-    
+
     def __init__(self, n_colors, n_vertices, n_feats, adaint_share=False) -> None:
         super().__init__()
         repeat_factor = n_colors if not adaint_share else 1
         self.intervals_generator = nn.Linear(
             n_feats, (n_vertices - 1) * repeat_factor)
-        
+
         self.n_colors = n_colors
         self.n_vertices = n_vertices
         self.adaint_share = adaint_share
-        
+
     def init_weights(self):
         r"""Init weights for models.
-        
+
         We use all-zero and all-one initializations for its weights and bias, respectively.
         """
         nn.init.zeros_(self.intervals_generator.weight)
         nn.init.ones_(self.intervals_generator.bias)
-        
+
     def forward(self, x):
         r"""Forward function for AdaInt module.
 
@@ -224,7 +224,7 @@ class AiLUT(BaseModel):
         train_cfg (dict, optional): Config for training. Default: None.
         test_cfg (dict, optional): Config for testing. Default: None.
     """
-    
+
     allowed_metrics = {'PSNR': psnr, 'SSIM': ssim}
 
     def __init__(self,
@@ -250,7 +250,7 @@ class AiLUT(BaseModel):
         self.backbone = dict(
             tpami=TPAMIBackbone,
             res18=Res18Backbone)[backbone.lower()](pretrained, extra_pooling=en_adaint)
-        
+
         # mapping h
         self.lut_generator = LUTGenerator(
             n_colors, n_vertices, self.backbone.out_channels, n_ranks)
@@ -271,24 +271,25 @@ class AiLUT(BaseModel):
         self.sparse_factor = sparse_factor
         self.smooth_factor = smooth_factor
         self.monotonicity_factor = monotonicity_factor
-        
+        self.backbone_name = backbone.lower()
+
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
-        
+
         self.fp16_enabled = False
-        
+
         self.init_weights()
-        
+
         self.recons_loss = build_loss(recons_loss)
-        
+
         # fix AdaInt for some steps
         self.n_fix_iters = train_cfg.get('n_fix_iters', 0) if train_cfg else 0
         self.adaint_fixed = False
         self.register_buffer('cnt_iters', torch.zeros(1))
-        
+
     def init_weights(self):
         r"""Init weights for models.
-        
+
         For the mapping f (`backbone`) and h (`lut_generator`), we follow the initialization in
             [TPAMI 3D-LUT](https://github.com/HuiZeng/Image-Adaptive-3DLUT).
         For the mapping g (`adaint`), we use all-zero and all-one initializations for its weights
@@ -301,11 +302,12 @@ class AiLUT(BaseModel):
             elif 'InstanceNorm' in classname:
                 nn.init.normal_(m.weight.data, 1.0, 0.02)
                 nn.init.constant_(m.bias.data, 0.0)
-        self.apply(special_initilization)
+        if self.backbone_name not in ['res18']:
+            self.apply(special_initilization)
         self.lut_generator.init_weights()
         if self.en_adaint:
             self.adaint.init_weights()
-            
+
     def forward_dummy(self, imgs):
         r"""The real implementation of model forward.
 
@@ -324,11 +326,11 @@ class AiLUT(BaseModel):
             vertices = self.adaint(codes)
         else:
             vertices = self.uniform_vertices
-            
+
         outs = ailut_transform(imgs, luts, vertices)
-        
+
         return outs, weights, vertices
-            
+
     @auto_fp16(apply_to=('lq', ))
     def forward(self, lq, gt=None, test_mode=False, **kwargs):
         r"""Forward function.
@@ -344,7 +346,7 @@ class AiLUT(BaseModel):
             return self.forward_test(lq, gt, **kwargs)
 
         return self.forward_train(lq, gt)
-    
+
     def forward_train(self, lq, gt):
         r"""Training forward function.
 
@@ -415,10 +417,10 @@ class AiLUT(BaseModel):
             mmcv.imwrite(tensor2img(output), save_path)
 
         return results
-    
+
     def train_step(self, data_batch, optimizer):
         r"""Train step.
-        
+
         Args:
             data_batch (dict): A batch of data.
             optimizer (obj): Optimizer.
@@ -446,7 +448,7 @@ class AiLUT(BaseModel):
         optimizer.step()
 
         outputs.update({'log_vars': log_vars})
-        
+
         self.cnt_iters += 1
         return outputs
 
@@ -461,7 +463,7 @@ class AiLUT(BaseModel):
         """
         output = self.forward_test(**data_batch, **kwargs)
         return output
-    
+
     def evaluate(self, output, gt):
         r"""Evaluation function.
 
